@@ -35,14 +35,14 @@ jobs:
           run_install: false
 
       - name: Get pnpm store directory
-        id: pnpm-store
+        id: config
         shell: bash
         run: echo "pnpm_store_path=$(pnpm store path --silent)" >>$GITHUB_OUTPUT
 
       - name: Setup pnpm cache
         uses: actions/cache@v4
         with:
-          path: ${{ steps.pnpm-store.outputs.pnpm-store-path }}
+          path: ${{ steps.config.outputs.pnpm_store_path }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-

@@ -1,5 +1,7 @@
+github
 ismoiliy
 lefthook
 louna
+oslojs
 postgres
 redis
