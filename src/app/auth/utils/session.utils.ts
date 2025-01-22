@@ -9,9 +9,9 @@ import { UNIX } from '~/constants';
 import { getCacheClient } from '~/lib';
 
 async function saveSession(session: Session) {
-  const cacheClient = await getCacheClient();
+  const cache = await getCacheClient();
 
-  await cacheClient.set(
+  await cache.set(
     `session:${session.id}`,
     JSON.stringify({
       id: session.id,
