@@ -1,0 +1,55 @@
+{
+  "name": "data-louna",
+  "version": "1.0.0",
+  "description": "Backend API using Hono, postgres.js, and Redis.",
+  "keywords": [
+    "backend",
+    "api",
+    "node",
+    "typescript",
+    "hono",
+    "postgres",
+    "redis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ismoiliy98/data-louna.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "bek",
+    "email": "ismoiliy98@gmail.com",
+    "url": "https://github.com/ismoiliy98"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "biome:check": "biome check .",
+    "biome:fix": "biome check . --fix",
+    "build": "dotenv -v NODE_ENV=production -- tsup-node src/index.ts --clean",
+    "clean": "git clean -xdf node_modules dist",
+    "dev": "dotenv -v NODE_ENV=development -- tsx watch src/index.ts",
+    "start": "NODE_ENV=production node dist/index.js",
+    "ts:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@t3-oss/env-core": "^0.11.1",
+    "hono": "^4.6.17",
+    "tsx": "^4.19.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.10.7",
+    "dotenv-cli": "^8.0.0",
+    "lefthook": "^1.10.10",
+    "postgres": "^3.4.5",
+    "redis": "^4.7.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22.13.1"
+  }
+}

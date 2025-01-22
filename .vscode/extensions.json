@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "yoavbls.pretty-ts-errors",
+    "streetsidesoftware.code-spell-checker",
+    "aaron-bond.better-comments",
+    "mikestead.dotenv",
+    "redhat.vscode-yaml",
+    "foxundermoon.shell-format",
+    "DavidAnson.vscode-markdownlint"
+  ]
+}

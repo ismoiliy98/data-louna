@@ -1,0 +1,22 @@
+name: data-louna
+
+services:
+  postgres:
+    image: postgres:17.2
+    environment:
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: data-louna
+    restart: on-failure:5
+    ports: ['127.0.0.1:5432:5432']
+    volumes: ['postgres:/var/lib/postgresql']
+
+  redis:
+    image: redis:7.4.2
+    restart: on-failure:5
+    ports: ['127.0.0.1:6379:6379']
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: ['redis:/data']
+
+volumes:
+  postgres:
+  redis:
