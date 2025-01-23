@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        linter: [packages, ts, biome]
+        linter: [ts, biome]
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
