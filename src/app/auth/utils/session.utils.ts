@@ -16,9 +16,9 @@ async function saveSession(session: Session) {
     JSON.stringify({
       id: session.id,
       user_id: session.userId,
-      expires_at: Math.floor(+session.expiresAt / 1000),
+      expires_at: Math.floor(+session.expiresAt / 1_000),
     }),
-    { EXAT: Math.floor(+session.expiresAt / 1000) }
+    { EXAT: Math.floor(+session.expiresAt / 1_000) }
   );
 }
 
@@ -56,7 +56,7 @@ export async function validateSessionToken(token: string) {
   const session: Session = {
     id: result.id,
     userId: result.user_id,
-    expiresAt: new Date(result.expires_at * 1000),
+    expiresAt: new Date(result.expires_at * 1_000),
   };
 
   if (Date.now() >= session.expiresAt.getTime()) {

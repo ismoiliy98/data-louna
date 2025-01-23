@@ -12,11 +12,16 @@ export const NodeEnv = {
 export type NodeEnv = ValuesOf<typeof NodeEnv>;
 
 export const Env = createEnv({
-  server: { DATABASE_URL: z.string().url(), CACHE_URL: z.string().url() },
+  server: {
+    DATABASE_URL: z.string().url(),
+    CACHE_URL: z.string().url(),
+    SKINPORT_CLIENT_ID: z.string().nonempty(),
+    SKINPORT_CLIENT_SECRET: z.string().nonempty(),
+  },
 
   shared: {
     NODE_ENV: z.nativeEnum(NodeEnv).default(NodeEnv.Development),
-    PORT: z.coerce.number().positive().default(3000),
+    PORT: z.coerce.number().positive().default(3_000),
   },
 
   runtimeEnv: process.env,
