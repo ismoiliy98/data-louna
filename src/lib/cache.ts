@@ -1,11 +1,11 @@
 import { type RedisClientType, createClient } from 'redis';
-import { env } from '~/constants';
+import { Env } from '~/constants';
 
 let client: RedisClientType;
 
 export async function getCacheClient() {
   if (!client) {
-    client = createClient({ url: env.CACHE_URL });
+    client = createClient({ url: Env.CACHE_URL });
 
     await client
       .on('error', (err) => {

@@ -18,5 +18,15 @@
   "[dockercompose]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "[sql]": { "editor.defaultFormatter": "mtxr.sqltools" },
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "driver": "PostgreSQL",
+      "name": "data-louna",
+      "connectString": "postgresql://postgres:123@127.0.0.1:5432/data-louna"
+    }
+  ]
 }

@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(64) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  balance FLOAT DEFAULT 0 NOT NULL
+);
+CREATE TABLE IF NOT EXISTS products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(64) NOT NULL,
+  price FLOAT NOT NULL,
+  quantity INT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS purchases (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id),
+  product_id INT NOT NULL REFERENCES products(id),
+  purchase_date TIMESTAMP DEFAULT NOW(),
+  quantity INT NOT NULL,
+  total_price FLOAT NOT NULL
+);

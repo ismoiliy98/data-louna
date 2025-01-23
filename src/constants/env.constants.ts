@@ -11,7 +11,7 @@ export const NodeEnv = {
 
 export type NodeEnv = ValuesOf<typeof NodeEnv>;
 
-export const env = createEnv({
+export const Env = createEnv({
   server: { DATABASE_URL: z.string().url(), CACHE_URL: z.string().url() },
 
   shared: {

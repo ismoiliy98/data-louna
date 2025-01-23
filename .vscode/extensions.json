@@ -7,6 +7,8 @@
     "mikestead.dotenv",
     "redhat.vscode-yaml",
     "foxundermoon.shell-format",
-    "DavidAnson.vscode-markdownlint"
+    "DavidAnson.vscode-markdownlint",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg"
   ]
 }

@@ -5,7 +5,7 @@ import {
   encodeBase32LowerCaseNoPadding,
   encodeHexLowerCase,
 } from '@oslojs/encoding';
-import { UNIX } from '~/constants';
+import { UnixTime } from '~/constants';
 import { getCacheClient } from '~/lib';
 
 async function saveSession(session: Session) {
@@ -35,7 +35,7 @@ export async function createSession(token: string, userId: number) {
   const session: Session = {
     id: sessionId,
     userId,
-    expiresAt: new Date(Date.now() + UNIX.DAY * 7),
+    expiresAt: new Date(Date.now() + UnixTime.Day * 7),
   };
 
   await saveSession(session);
@@ -65,8 +65,8 @@ export async function validateSessionToken(token: string) {
     return null;
   }
 
-  if (Date.now() >= session.expiresAt.getTime() - UNIX.DAY * 3) {
-    session.expiresAt = new Date(Date.now() + UNIX.DAY * 7);
+  if (Date.now() >= session.expiresAt.getTime() - UnixTime.Day * 3) {
+    session.expiresAt = new Date(Date.now() + UnixTime.Day * 7);
     await saveSession(session);
   }
 
