@@ -25,7 +25,7 @@
   "scripts": {
     "biome:check": "biome check .",
     "biome:fix": "biome check . --fix",
-    "build": "dotenv -v NODE_ENV=production -- tsup-node src/index.ts --clean",
+    "build": "dotenv -v NODE_ENV=production -- tsup src/index.ts --clean --minify",
     "clean": "git clean -xdf node_modules dist",
     "dev": "dotenv -v NODE_ENV=development -- tsx watch src/index.ts",
     "start": "NODE_ENV=production node dist/index.js",
@@ -39,16 +39,16 @@
     "@t3-oss/env-core": "^0.11.1",
     "argon2": "^0.41.1",
     "hono": "^4.6.18",
+    "postgres": "^3.4.5",
+    "redis": "^4.7.0",
     "tsx": "^4.19.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@types/node": "^22.10.9",
+    "@types/node": "^22.10.10",
     "dotenv-cli": "^8.0.0",
     "lefthook": "^1.10.10",
-    "postgres": "^3.4.5",
-    "redis": "^4.7.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3"
   },
