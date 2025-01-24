@@ -1,5 +1,6 @@
 import { authGuard } from '$/auth/middlewares';
 import { authRouter } from '$/auth/routes';
+import { productsRouter } from '$/products/routes';
 import { skinportRouter } from '$/skinport/routes';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
@@ -11,10 +12,11 @@ async function bootstrap() {
   const app = new Hono().basePath('/api');
   const protectedApp = new Hono().use(authGuard);
 
-  protectedApp.route('/skinport', skinportRouter);
+  protectedApp
+    .route('/skinport', skinportRouter)
+    .route('/products', productsRouter);
 
-  app.route('/auth', authRouter);
-  app.route('/', protectedApp);
+  app.route('/auth', authRouter).route('/', protectedApp);
 
   app.onError((err, c) => {
     if (err instanceof HTTPException) {

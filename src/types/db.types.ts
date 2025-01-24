@@ -5,14 +5,14 @@ export type User = {
   balance: number;
 };
 
-export type Products = {
+export type Product = {
   id: number;
   name: string;
   price: number;
-  quantity: number;
+  stock: number;
 };
 
-export type Purchases = {
+export type Purchase = {
   id: number;
   user_id: number;
   product_id: number;
