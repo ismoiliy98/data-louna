@@ -359,4 +359,4 @@ Feel free to use, modify, and distribute it as you wish.
 
 ---
 
-### Made with ❤️ by [bek](https://github.com/ismoiliy98)
+_Made with ❤️ by [bek](https://github.com/ismoiliy98)_
