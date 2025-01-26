@@ -17,16 +17,16 @@
    - [Installation](#installation)
    - [Database Setup](#database-setup)
    - [Running the App](#running-the-app)
-   - [Using Docker (Coming Soon)](#using-docker-coming-soon)
-7. [API Endpoints](#api-endpoints)
+7. [Docker Usage](#docker-usage)
+8. [API Endpoints](#api-endpoints)
    - [Auth](#auth)
    - [Products](#products)
    - [Skinport](#skinport)
-8. [Development & Tooling](#development--tooling)
+9. [Development & Tooling](#development--tooling)
    - [Scripts](#scripts)
    - [Linting & Formatting](#linting--formatting)
    - [Continuous Integration](#continuous-integration)
-9. [License](#license)
+10. [License](#license)
 
 ---
 
@@ -38,7 +38,7 @@
 - **Products** listing, reading, and purchasing logic using PostgreSQL.
 - **Skinport API** integration with data caching. Data is refreshed periodically (every hour) to keep it up-to-date, minimizing redundant external calls.
 - **TypeScript Strict** configuration for robust typing.
-- **CI pipeline** that runs lints and checks via GitHub Actions.
+- **CI pipeline** that runs lints and checks via GitHub Actions, and builds/pushes Docker images to GitHub Container Registry (GHCR).
 
 ---
 
@@ -51,13 +51,14 @@
    Users can purchase products if they have sufficient balance. Balances and stock counts are updated atomically in PostgreSQL.
 
 3. **Skinport Integration**  
-   Fetches CS:GO item data from the [Skinport API](https://skinport.com/). Cached data is refreshed every hour, ensuring minimal calls to the external service.
+   Fetches CS:GO item data from the [Skinport API](https://skinport.com/) with a 1-hour cache refresh to reduce external requests.
 
 4. **Strict TypeScript Setup**  
    Helps catch bugs early and ensures high code quality.
 
-5. **CI/CD Ready**  
-   GitHub Actions run on push and pull requests for linting and checks. A Docker workflow will soon be added to build and push an OCI image to GitHub Container Registry (GHCR).
+5. **CI/CD**  
+   - **Linting**: GitHub Actions check code quality via TypeScript and Biome.
+   - **Docker**: Docker images are built and pushed to GHCR.  
 
 ---
 
@@ -102,6 +103,7 @@ Below is a simplified tree of the most important directories and files:
 ├── .github
 │   └── workflows
 │       └── ci.yaml
+├── Dockerfile
 ├── db.schema.sql
 ├── docker-compose.yaml
 ├── .env.sample
@@ -119,6 +121,7 @@ Below is a simplified tree of the most important directories and files:
 - **`src/lib`**: Database and Redis client setup.
 - **`src/index.ts`**: Entry point to bootstrap and run the Hono server.
 - **`db.schema.sql`**: Simple schema for `users`, `products`, and `purchases`.
+- **`Dockerfile`**: Builds a Node.js container to run the project.
 - **`.github/workflows/ci.yaml`**: GitHub Actions CI configuration.
 
 ---
@@ -209,15 +212,44 @@ pnpm build
 pnpm start
 ```
 
-### Using Docker (Coming Soon)
+---
 
-A **Dockerfile** is planned to be added to streamline container builds. It will allow:
+## Docker Usage
 
-- Building an OCI image via GitHub Actions.
-- Publishing images to GHCR (GitHub Container Registry).
-- Easy deployment to container environments (Kubernetes, Docker Swarm, etc.).
+A multi-stage **Dockerfile** is included to build a minimal production image:
 
-Stay tuned!
+1. **Build & Run Locally**  
+
+   ```bash
+   docker build -t data-louna:latest .
+   docker run --name data-louna \
+     -p 3000:3000 \
+     -e DATABASE_URL="postgresql://postgres:123@localhost:5432/data-louna" \
+     -e CACHE_URL="redis://localhost:6379/0" \
+     -e SKINPORT_CLIENT_ID="xxx" \
+     -e SKINPORT_CLIENT_SECRET="xxx" \
+     data-louna:latest
+   ```
+
+   This runs the container on port 3000 with the necessary environment variables.
+
+2. **Docker Compose**  
+   A sample `docker-compose.yaml` is provided to orchestrate containers for PostgreSQL, Redis, and the **data-louna** service.  
+   You can run:  
+
+   ```bash
+   docker compose up -d
+   ```
+
+   Check out the file to see default environment mappings and service definitions.
+
+3. **GHCR Publishing**  
+   The GitHub Actions [CI workflow](./.github/workflows/ci.yaml) automatically builds and pushes images to **ghcr.io** on push or pull request (with versioning). Once built, you can pull and run them directly:
+
+   ```bash
+   docker pull ghcr.io/ismoiliy98/data-louna:latest
+   docker run -p 3000:3000 ghcr.io/ismoiliy98/data-louna:latest
+   ```
 
 ---
 
@@ -227,12 +259,12 @@ The server is accessible at `http://localhost:3000` by default. All routes are p
 
 ### Auth
 
-| Endpoint              | Method | Body                                     | Description                                      | Auth Required |
-|-----------------------|--------|------------------------------------------|--------------------------------------------------|--------------|
-| `/api/auth/signup`    | POST   | `{"username":"string","password":"string"}` | Registers a new user and returns a session token | ❌            |
-| `/api/auth/login`     | POST   | `{"username":"string","password":"string"}` | Authenticates user and returns a session token   | ❌            |
-| `/api/auth/logout`    | GET    | -                                        | Logs out the current user (invalidates session)  | ✅ (Bearer)   |
-| `/api/auth/change-password` | POST   | `{"currentPassword":"string","newPassword":"string"}` | Changes user password                            | ✅ (Bearer)   |
+| Endpoint                   | Method | Body                                                | Description                                               | Auth Required |
+|---------------------------|--------|-----------------------------------------------------|-----------------------------------------------------------|--------------|
+| `/api/auth/signup`        | POST   | `{"username":"string","password":"string"}`         | Registers a new user and returns a session token          | ❌            |
+| `/api/auth/login`         | POST   | `{"username":"string","password":"string"}`         | Authenticates user and returns a session token            | ❌            |
+| `/api/auth/logout`        | GET    | -                                                   | Logs out the current user (invalidates session)           | ✅ (Bearer)   |
+| `/api/auth/change-password`| POST   | `{"currentPassword":"string","newPassword":"string"}` | Changes user password                                     | ✅ (Bearer)   |
 
 **Example** – Sign up:
 
@@ -261,11 +293,11 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 ### Products
 
-| Endpoint                           | Method | Body                                        | Description                                         | Auth Required |
-|------------------------------------|--------|---------------------------------------------|-----------------------------------------------------|--------------|
-| `/api/products/list`              | GET    | -                                           | Returns a list of all products                      | ✅ (Bearer)   |
-| `/api/products/:id`               | GET    | -                                           | Returns a specific product by ID                    | ✅ (Bearer)   |
-| `/api/products/purchase`          | POST   | `{"productId": number, "quantity": number}` | Purchases a product if user balance and stock allow | ✅ (Bearer)   |
+| Endpoint                    | Method | Body                                        | Description                                         | Auth Required |
+|----------------------------|--------|---------------------------------------------|-----------------------------------------------------|--------------|
+| `/api/products/list`       | GET    | -                                           | Returns a list of all products                      | ✅ (Bearer)   |
+| `/api/products/:id`        | GET    | -                                           | Returns a specific product by ID                    | ✅ (Bearer)   |
+| `/api/products/purchase`   | POST   | `{"productId": number, "quantity": number}` | Purchases a product if user balance and stock allow | ✅ (Bearer)   |
 
 **Example** – List products:
 
@@ -278,9 +310,9 @@ curl -X GET http://localhost:3000/api/products/list \
 
 ### Skinport
 
-| Endpoint                 | Method | Description                                | Auth Required |
-|--------------------------|--------|--------------------------------------------|--------------|
-| `/api/skinport/items`    | GET    | Returns a list of CS:GO items from cache   | ✅ (Bearer)   |
+| Endpoint              | Method | Description                                       | Auth Required |
+|-----------------------|--------|---------------------------------------------------|--------------|
+| `/api/skinport/items` | GET    | Returns a list of CS:GO items (cached hourly)     | ✅ (Bearer)   |
 
 The data is cached for one hour and periodically refreshed in the background.
 
@@ -292,32 +324,31 @@ The data is cached for one hour and periodically refreshed in the background.
 
 In **`package.json`**, you have:
 
-| Script       | Command                                        | Description                                         |
-|--------------|------------------------------------------------|-----------------------------------------------------|
-| `dev`        | `dotenv -v NODE_ENV=development -- tsx watch src/index.ts` | Starts local dev server with live reload via TSX.   |
-| `build`      | `dotenv -v NODE_ENV=production -- tsup-node src/index.ts --clean` | Builds production files into `/dist`.               |
-| `start`      | `NODE_ENV=production node dist/index.js`       | Starts the compiled production server.              |
-| `ts:check`   | `tsc --noEmit`                                 | Type-checks the entire project using TypeScript.    |
-| `biome:check`| `biome check .`                                | Runs Biome checks (lint & format checks).           |
-| `biome:fix`  | `biome check . --fix`                          | Auto-fixes issues found by Biome.                   |
-| `clean`      | `git clean -xdf node_modules dist`             | Removes `node_modules` and `dist`.                  |
+| Script         | Command                                         | Description                                         |
+|----------------|-------------------------------------------------|-----------------------------------------------------|
+| `dev`          | `dotenv -v NODE_ENV=development -- tsx watch src/index.ts` | Starts local dev server with live reload (TSX).     |
+| `build`        | `dotenv -v NODE_ENV=production -- tsup-node src/index.ts --clean` | Builds production files into `/dist`.               |
+| `start`        | `NODE_ENV=production node dist/index.js`        | Starts the compiled production server.              |
+| `ts:check`     | `tsc --noEmit`                                  | Type-checks the entire project using TypeScript.    |
+| `biome:check`  | `biome check .`                                 | Runs Biome checks (lint & format checks).           |
+| `biome:fix`    | `biome check . --fix`                           | Auto-fixes issues found by Biome.                   |
+| `clean`        | `git clean -xdf node_modules dist`              | Removes `node_modules` and `dist`.                  |
 
 ### Linting & Formatting
 
-This project uses [Biome.js](https://biomejs.dev/) to handle both **linting** and **formatting** in a unified way.  
+This project uses [Biome.js](https://biomejs.dev/) to handle both **linting** and **formatting** in a unified way:
 
 - **Check**: `pnpm biome:check`  
 - **Fix**: `pnpm biome:fix`
 
 ### Continuous Integration
 
-The project uses **GitHub Actions** to run lint checks on each push and pull request. See [`.github/workflows/ci.yaml`](./.github/workflows/ci.yaml) for details. The pipeline:
+The project uses **GitHub Actions** to run lint checks on each push and pull request, and to build/push Docker images:
 
-1. Installs dependencies using `pnpm`.
-2. Executes **TypeScript checks** (`pnpm ts:check`).
-3. Executes **Biome** checks (`pnpm biome:check`).
+1. **Linting**: Installs dependencies, then runs `ts:check` and `biome:check`.  
+2. **Docker Build & Push**: If you push to `main`, `stage`, or `test` branches, an OCI image is built and pushed to [GHCR](https://ghcr.io).
 
-In future, the CI will also **build a Docker image** and push it to GHCR for deployment.
+See [`.github/workflows/ci.yaml`](./.github/workflows/ci.yaml) for details.
 
 ---
 
@@ -328,4 +359,4 @@ Feel free to use, modify, and distribute it as you wish.
 
 ---
 
-### Made with ❤️ by [bek](https://github.com/ismoiliy98) {align=center}
+### Made with ❤️ by [bek](https://github.com/ismoiliy98)
