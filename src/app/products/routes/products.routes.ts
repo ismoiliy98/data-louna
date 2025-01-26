@@ -33,67 +33,67 @@ export const productsRouter = new Hono<AppFactory>()
   .post('/purchase', zValidator('json', purchaseProductSchema), async (c) => {
     const sql = getDBClient();
     const { productId, quantity } = c.req.valid('json');
-    const session = c.get('session');
+    const { userId } = c.get('session') || { userId: null };
 
-    if (!session) {
+    if (!userId) {
       throw new HTTPException(HttpStatus.Unauthorized, {
         message: 'Unauthorized',
       });
     }
 
-    const [[product], [user]] = await Promise.all([
-      sql<Product[]>`
-        SELECT * FROM products WHERE id = ${productId} LIMIT 1
-      `,
-      sql<Pick<User, 'balance'>[]>`
-        SELECT balance FROM users WHERE id = ${session.userId} LIMIT 1
-      `,
-    ]);
+    const newBalance = await sql.begin(async (sql) => {
+      const [product] = await sql<Pick<Product, 'stock' | 'price'>[]>`
+        SELECT p.stock, p.price
+        FROM users u, products p
+        WHERE u.id = ${userId} AND p.id = ${productId} 
+        FOR UPDATE
+      `;
 
-    if (!user) {
-      throw new HTTPException(HttpStatus.Unauthorized, {
-        message: 'Unauthorized',
-      });
-    }
+      if (!product) {
+        throw new HTTPException(HttpStatus.BadRequest, {
+          message: 'Product or User not found',
+        });
+      }
 
-    if (!product) {
-      throw new HTTPException(HttpStatus.NotFound, {
-        message: 'Product not found',
-      });
-    }
+      const updatedProducts = await sql`
+        UPDATE products
+        SET stock = stock - ${quantity}
+        WHERE id = ${productId} AND stock >= ${quantity}
+        RETURNING stock
+      `;
 
-    if (product.stock < quantity) {
-      throw new HTTPException(HttpStatus.BadRequest, {
-        message: 'Insufficient stock',
-      });
-    }
+      if (updatedProducts.length < 1) {
+        throw new HTTPException(HttpStatus.BadRequest, {
+          message: 'Insufficient stock',
+        });
+      }
 
-    const totalPrice = Number((product.price * quantity).toFixed(2));
-
-    if (user.balance < totalPrice) {
-      throw new HTTPException(HttpStatus.BadRequest, {
-        message: 'Insufficient balance',
-      });
-    }
-
-    const newBalance = Number((user.balance - totalPrice).toFixed(2));
-    const newStock = product.stock - quantity;
-
-    await sql.begin((sql) => [
-      sql<Pick<User, 'balance'>[]>`
-        UPDATE users SET balance = ${newBalance}
-        WHERE id = ${session.userId}
+      const totalPrice = product.price * quantity;
+      const [updatedUser] = await sql<Pick<User, 'balance'>[]>`
+        UPDATE users
+        SET balance = ROUND((balance - ${totalPrice})::numeric, 2)
+        WHERE id = ${userId} AND balance >= ${totalPrice}
         RETURNING balance
-      `,
-      sql`
+      `;
+
+      if (!updatedUser) {
+        throw new HTTPException(HttpStatus.BadRequest, {
+          message: 'Insufficient balance',
+        });
+      }
+
+      await sql`
         INSERT INTO purchases (user_id, product_id, quantity, total_price)
-        VALUES (${session.userId}, ${productId}, ${quantity}, ${totalPrice})
-      `,
-      sql`
-        UPDATE products SET stock = ${newStock}
-        WHERE id = ${productId}
-      `,
-    ]);
+        VALUES (
+          ${userId},
+          ${productId},
+          ${quantity},
+          ROUND(${totalPrice}, 2)
+        )
+      `;
+
+      return updatedUser.balance;
+    });
 
     return c.json({ newBalance, message: 'Purchase successful' });
   });
