@@ -6,7 +6,8 @@
     "node_modules",
     "dist",
     "pnpm-lock.yaml",
-    ".gitignore"
+    ".gitignore",
+    ".dockerignore"
   ],
   "dictionaries": ["Dev", "Namings", "Other"],
   "dictionaryDefinitions": [

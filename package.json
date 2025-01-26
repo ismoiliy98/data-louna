@@ -1,6 +1,6 @@
 {
   "name": "data-louna",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Backend API using Hono, postgres.js, and Redis.",
   "keywords": [
     "backend",
